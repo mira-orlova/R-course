@@ -1,0 +1,306 @@
+---
+title: "Проверка установок"
+format: html
+---
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+beav <- beaver1
+beav$id <- 1:nrow(beaver1)
+beav <- beav |> mutate(activ = factor(activ))
+ggplot(data = beav, aes(x = id, y = temp, group = activ, color = activ)) +
+  geom_line() +
+  geom_point()
+```
+
+```{r}
+library(broom)
+
+lmfit <- lm(mpg ~ wt, mtcars)
+tidy(lmfit)
+```
+
+```{r}
+library(epiR)
+
+epi.sssupc(
+  treat = 12,
+  control = 11,
+  sigma = 2,
+  delta = 0.5,
+  n = NA,
+  power = 0.8,
+  r = 1,
+  alpha = 0.05,
+  sided.test = 2
+)
+```
+
+```{r}
+library(Hmisc)
+
+x1 <- rnorm(100)
+x2 <- rnorm(100)
+y <- exp(x1 + x2 + rnorm(100))
+f <- lm(log(y) ~ x1 + poly(x2, 3), y = TRUE)
+abs.error.pred(lp = exp(fitted(f)), y = y)
+```
+
+```{r}
+library("sandwich")
+library("lmtest")
+
+data("PetersenCL", package = "sandwich")
+
+m <- lm(y ~ x + year, data = PetersenCL)
+
+coeftest(m, vcov. = vcovHC(m, type = "HC4"))
+```
+
+```{r}
+library(multcomp)
+
+data(swiss)
+
+lmod <- lm(Fertility ~ ., data = swiss)
+
+glht(
+  lmod,
+  linfct = c(
+    "Agriculture = 0",
+    "Examination = 0",
+    "Education = 0",
+    "Catholic = 0",
+    "Infant.Mortality = 0"
+  )
+)
+```
+
+```{r}
+library(pROC)
+
+data(aSAH)
+
+roc(outcome ~ s100b, aSAH)
+```
+
+```{r}
+library(rstatix)
+library(dplyr)
+
+data("ToothGrowth")
+
+ToothGrowth |> t_test(len ~ 1, mu = 0)
+```
+
+```{r}
+library("sandwich")
+
+data("PetersenCL", package = "sandwich")
+
+m <- lm(y ~ x, data = PetersenCL)
+
+sandwich(m)
+```
+
+```{r}
+library(TrialSize)
+
+DLT <- c(0.01, 0.014, 0.025, 0.056, 0.177, 0.594, 0.963)
+Example.11.6.2 <- AB.withDescalation(
+  A = 3,
+  B = 3,
+  C = 1,
+  D = 1,
+  E = 1,
+  DLT = DLT
+)
+Example.11.6.2
+```
+
+```{r}
+library(yardstick)
+library(dplyr)
+
+data("two_class_example")
+data("hpc_cv")
+# Two class
+accuracy(two_class_example, truth, predicted)
+```
+
+```{r}
+library(FactoMineR)
+
+## Example two-way anova
+data(senso)
+res <- AovSum(Score ~ Product + Day, data = senso)
+res
+```
+
+```{r}
+library(factoextra)
+
+data(decathlon2)
+decathlon.active <- decathlon2[1:23, 1:10]
+res.pca <- prcomp(decathlon.active, scale = TRUE)
+fviz_pca_biplot(res.pca)
+```
+
+
+```{r}
+library(ggplot2)
+
+data(crime, package = "ggbiplot")
+
+crime.pca <-
+  crime |>
+  dplyr::select(where(is.numeric)) |>
+  prcomp(scale. = TRUE)
+
+ggbiplot::ggbiplot(
+  crime.pca,
+  labels = crime$st,
+  circle = TRUE,
+  varname.size = 4,
+  varname.color = "red"
+)
+```
+
+```{r}
+library(dagitty)
+
+g <- dagitty("dag{ z <- x -> y }")
+ancestorGraph(g, "z")
+```
+
+```{r}
+library(dplyr)
+library(dagitty)
+library(ggplot2)
+library(ggdag)
+
+dagify(
+  y ~ x,
+  m ~ x + y
+) |>
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_point() +
+  geom_dag_edges_arc() +
+  geom_dag_text() +
+  theme_dag()
+```
+
+```{r}
+library(corrplot)
+
+## diverging colors
+par(mar = c(0, 0, 0, 0) + 0.1)
+plot(0, xlim = c(-0.1, 1), ylim = c(0, 1), type = 'n')
+col <- c('RdBu', 'BrBG', 'PiYG', 'PRGn', 'PuOr', 'RdYlBu')
+for (i in 1:length(col)) {
+  colorlegend(
+    COL2(col[i]),
+    -10:10 / 10,
+    align = 'l',
+    cex = 0.8,
+    xlim = c(0, 1),
+    ylim = c(i / length(col) - 0.1, i / length(col)),
+    vertical = FALSE
+  )
+  text(-0.01, i / length(col) - 0.02, col[i], adj = 0.5, pos = 2, cex = 0.8)
+}
+```
+
+```{r}
+library(GGally)
+
+data(flea)
+ggpairs(flea, columns = 2:4, ggplot2::aes(colour = species))
+```
+
+```{r}
+library(ggplot2)
+library(ggExtra)
+
+data(iris)
+
+piris <- ggplot(iris, aes(Sepal.Length, Sepal.Width, colour = Species)) +
+  geom_point()
+
+ggMarginal(piris, groupColour = TRUE, groupFill = TRUE)
+```
+
+```{r}
+library(ggfortify)
+
+m <- lm(Petal.Width ~ Petal.Length, data = iris)
+
+autoplot(m, which = 1:6, ncol = 2, label.size = 3)
+```
+
+```{r}
+library(ggpubr)
+
+wdata <- data.frame(
+  sex = factor(rep(c("F", "M"), each = 200)),
+  weight = c(rnorm(200, 55), rnorm(200, 58))
+)
+head(wdata, 4)
+```
+
+```{r}
+library(pheatmap)
+
+# Create test matrix
+test <- matrix(rnorm(200), 20, 10)
+test[1:10, seq(1, 10, 2)] <- test[1:10, seq(1, 10, 2)] + 3
+test[11:20, seq(2, 10, 2)] <- test[11:20, seq(2, 10, 2)] + 2
+test[15:20, seq(2, 10, 2)] <- test[15:20, seq(2, 10, 2)] + 4
+colnames(test) <- paste("Test", 1:10, sep = "")
+rownames(test) <- paste("Gene", 1:20, sep = "")
+# Draw heatmaps
+pheatmap(test)
+```
+
+```{r}
+library(plotly)
+
+plot_ly() |> add_data(economics) |> add_trace(x = ~date, y = ~pce)
+```
+
+```{r}
+library(flextable)
+
+flextable(mtcars)
+```
+
+```{r}
+library(openxlsx)
+
+wb <- createWorkbook()
+addWorksheet(wb, sheetName = "S1")
+addWorksheet(wb, sheetName = "S2")
+addWorksheet(wb, sheetName = "S3")
+activeSheet(wb) # default value is the first sheet active
+```
+
+```{r}
+library(gtsummary)
+
+tbl_summary(trial, include = c(age, grade, response), by = trt)
+```
+
+```{r}
+library(devtools)
+
+loaded_packages()
+```
+
+```{r}
+library(knitr)
+
+kable(head(iris))
+```
