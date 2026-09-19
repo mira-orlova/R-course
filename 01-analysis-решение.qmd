@@ -1,0 +1,193 @@
+---
+title: Анализ данных
+format:
+  html:
+    embed-resources: true
+---
+
+```{r}
+#| include: false
+
+library(tidyverse)
+library(flextable)
+library(gtsummary)
+```
+
+Это пример клинического исследования с двумя дозами Xanomeline и группой Placebo.
+В папке `data` файл с данными для занятия `data.csv` и `lb.csv` с лабораторными результатами.
+
+Мы импортируем и проверим данные, посчитаем BMI и поработаем с лабораторными результаты, построим итоговую статистическую таблицу.
+
+![](./tidyverse-workflow.png)
+
+## Импорт и очистка
+
+Загрузим `data.csv`, посмотрим данные и выберем только нужные столбцы.
+
+```{r}
+data <- read_csv("data/data.csv")
+```
+
+```{r}
+data <- data |>
+  rename(ID = USUBJID)
+```
+
+Уберем Screen Failure.
+
+```{r}
+data <- data |>
+  filter(
+    ARM != "Screen Failure"
+  )
+```
+
+```{r}
+#| include: false
+
+table(data$ARM)
+
+data |>
+  count(ARM)
+```
+
+Преобразуемые данные.
+
+```{r}
+data <- data |>
+  mutate(
+    ARM = factor(
+      ARM,
+      c("Placebo", "Xanomeline Low Dose", "Xanomeline High Dose")
+    )
+  )
+
+data |>
+  count(ARM)
+```
+
+```{r}
+data <- data |>
+  mutate(
+    WEIGHT = str_replace(WEIGHT, ", ", "."),
+    WEIGHT = as.numeric(WEIGHT)
+  )
+
+data |>
+  arrange(WEIGHT)
+```
+
+## Рассчет статистик
+
+Работаем с импортированными данными.
+
+Рассчитаем BMI = рост / вес^2
+
+```{r}
+data <- data |>
+  mutate(
+    HEIGHT = HEIGHT / 100,
+    WEIGHT = WEIGHT / 2.2
+  )
+
+data <- data |>
+  mutate(BMI = WEIGHT / HEIGHT^2)
+```
+
+Посчитаем кол-во выше нормы.
+
+```{r}
+data |>
+  mutate(BMI = if_else(BMI > 25, "Много", "Норма")) |>
+  count(BMI)
+```
+
+```{r}
+data |>
+  count(
+    BMI = case_when(
+      BMI < 18.5 ~ "Ниже нормы",
+      BMI < 25 ~ "Норма",
+      TRUE ~ "Выше нормы"
+    )
+  )
+```
+
+Посчитаем число участников, средний возраст и средний BMI по всей выборке и по группам.
+
+```{r}
+data |>
+  summarise(
+    n = n(),
+    mean_age = mean(AGE),
+    mean_bmi = mean(BMI),
+  )
+```
+
+```{r}
+data |>
+  group_by(ARM) |>
+  summarise(
+    n = n(),
+    mean_age = mean(AGE),
+    mean_bmi = mean(BMI)
+  )
+```
+
+## Отчёт
+
+```{r}
+data |>
+  group_by(ARM) |>
+  summarise(
+    n = n(),
+    mean_age = mean(AGE),
+    mean_bmi = mean(BMI)
+  ) |>
+  mutate(
+    mean_age = round(mean_age, 1),
+    mean_bmi = round(mean_bmi, 1)
+  ) |>
+  flextable() |>
+  autofit() |>
+  set_header_labels(
+    mean_age = "Age",
+    mean_bmi = "BMI"
+  )
+```
+
+```{r}
+tbl_summary(
+  data,
+  include = -ID,
+  by = ARM,
+  missing_text = "Missing data",
+  label = c(AGE ~ "Age, years")
+) |>
+  as_flex_table()
+```
+
+## Форматы и объединение данных
+
+Длинный формат
+
+```{r}
+data_long <- data |>
+  select(ID, ARM, B12:HB) |>
+  pivot_longer(c(B12, WBC, HB), names_to = "TEST", values_to = "RES")
+```
+
+Широкий формат
+
+```{r}
+data_wide <- data_long |>
+  pivot_wider(names_from = TEST, values_from = RES)
+```
+
+## Соединяем данные вместе
+
+```{r}
+data |>
+  select(ID, AGE, SEX) |>
+  left_join(data_wide, by = "ID")
+```

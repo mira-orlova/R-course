@@ -1,0 +1,110 @@
+---
+title: "Estimation of mean and SE"
+author: "Evgeny Bakin"
+date: today
+format: html
+execute:
+  echo: true
+---
+
+```{r setup}
+#| include: false
+library(tidyverse)
+
+```
+
+## Модель пациента: исследование прироста гемоглобина
+
+```{r pressure}
+#| echo: false
+
+values <- 0:8 # Значения, которые может принимать прирост (случайная величина)
+max_val <- max(values) # Максимальное значение случайной величины
+Pr <- 1/length(values)  # Распределение в генеральной совокупности
+
+df <- data.frame(values, Pr)
+
+ggplot(df, aes(x=values, y=Pr)) +
+  geom_point() + 
+  geom_segment( aes(x=values, xend=values, y=0, yend=Pr)) +
+  scale_x_continuous(breaks = values) +
+  theme_bw() +
+  theme(
+    text = element_text(size = 20)
+  )
+
+```
+## Характеристики прироста
+
+```{r characteristics}
+
+true_mean <- sum(values*Pr) # Истинное среднее (математическое ожидание)
+
+print(true_mean)
+
+variance <- sum((values-true_mean)^2*Pr) # Дисперсия
+
+print(variance)
+
+standard_deviation <- sqrt(variance)
+
+print(standard_deviation)
+
+```
+## Однократная оценка по выборке
+
+```{r sample_1}
+
+n_patients <- 10 # Количество добровольцев 
+
+my_group_Hg_upd <- sample(values, size = n_patients, replace = TRUE) # Результаты добровольцев
+
+print(my_group_Hg_upd)
+
+sample_mean <- mean(my_group_Hg_upd)
+
+print(sample_mean)
+
+# Каков порядок ошибки, как он зависит от n_patients?
+
+```
+
+## Набираем статистику
+
+```{r sample_n}
+
+n_patients <- 10 # Количество добровольцев 
+
+n_repeats <- 1000 # Количество повторений эксперимента
+
+df_all_repeats <- data.frame(
+  n_exp = rep(1:n_repeats, each = n_patients),
+  ID =  rep(1:n_patients, n_repeats),
+  Hg_upd = sample(values, size = n_repeats*n_patients, replace = TRUE)
+)
+
+```
+
+## Оценка среднего в каждом эксперименте
+
+```{r estimations}
+
+df_sample_mean <- df_all_repeats |> 
+  group_by(n_exp) |> 
+  dplyr::summarise(mean_Hg_upd = mean(Hg_upd)) |> 
+  ungroup()
+
+ggplot(df_sample_mean, aes(x = mean_Hg_upd)) +
+  geom_histogram(color = 'black', fill = 'white', binwidth = 0.2) +
+  theme_bw()
+
+```
+
+## Количественные и качественные итоги
+
+```{r conclusions}
+
+error <- ...
+print(error)
+
+```

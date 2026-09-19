@@ -1,0 +1,118 @@
+---
+title: "blood type"
+format: html
+---
+
+```{r setup}
+library(tidyverse)
+library(broom)
+library(epiR)
+library(Hmisc)
+library(lmtest)
+library(multcomp)
+library(pROC)
+library(rstatix)
+library(sandwich)
+library(TrialSize)
+library(yardstick)
+library(FactoMineR)
+library(factoextra)
+library(ggbiplot)
+library(dagitty)
+library(ggdag)
+library(corrplot)
+library(GGally)
+library(ggExtra)
+library(ggfortify)
+library(ggpubr)
+library(pheatmap)
+library(plotly)
+library(flextable)
+library(openxlsx)
+library(gtsummary)
+library(devtools)
+library(knitr)
+```
+
+```{r}
+data <- read_delim("data/data_csv.csv", delim = ",", n_max = 10)
+data
+
+data$Группа <- factor(data$Группа)
+data$Пол <- factor(data$Пол)
+data$`Группа крови` <- factor(data$`Группа крови`)
+
+data
+
+write_delim(data, "out/data_csv.csv", delim = ",")
+list.files("out/")
+
+read_csv("data/data_csv.csv", skip = 0, n_max = 10) # разделитель — запятая
+read_csv2("data/data_csv2.csv", skip = 0, n_max = 10) # разделитель — точка с запятой
+read_tsv("data/data_tsv.tsv", skip = 0, n_max = 10) # разделитель — символ табуляции
+
+write_csv(data, "out/data_csv.csv")
+write_excel_csv(data, "out/data_csv.csv")
+write_csv2(data, "out/data_csv2.csv")
+write_excel_csv2(data, "out/data_csv2.csv")
+write_tsv(data, "out/data_tsv.tsv")
+```
+
+```{r}
+readxl::read_excel("data/data_excel.xlsx", sheet = "data")
+
+openxlsx::write.xlsx(data, "out/data_excel.xlsx", colNames = TRUE)
+```
+
+```{r}
+read_rds("data/data_rds.rds")
+
+write_rds(data, "out/data_rds.rds")
+```
+
+```{r}
+data$`Группа крови`
+
+data[["Группа крови"]] # то же самое, другой синтаксис
+```
+
+```{r}
+tibble(
+  var_first = 1:10,
+  var_second = var_first^2
+)
+
+tibble(
+  var_first = 1:10,
+  var_second = if_else(var_first < 5, var_first + 100, var_first)
+)
+```
+
+```{r}
+data <- as.data.frame(data)
+
+data |>
+  add_column(just_column = "just values", .before = 1)
+
+data |>
+  add_row(Группа = "New group", Возраст = 100, .before = 1)
+
+data |>
+  mutate(ID = row_number())
+```
+
+```{r}
+data <- read_tsv("data/data_tsv.tsv", show_col_types = FALSE)
+data$Группа <- factor(data$Группа)
+data$Пол <- factor(data$Пол)
+data$`Группа крови` <- factor(
+  data$`Группа крови`,
+  levels = c("O (I)", "A (II)", "B (III)", "AB (IV)")
+)
+
+data
+```
+
+```{r}
+
+```
